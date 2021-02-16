@@ -11,7 +11,8 @@ import {
 import { Icon, Card, ListItem } from "react-native-elements";
 import { useFonts } from "expo-font";
 import * as Animatable from "react-native-animatable";
-import Carousel from "react-native-snap-carousel";
+import { SliderBox } from "react-native-image-slider-box";
+
 
 import "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
@@ -20,6 +21,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 const Stack = createStackNavigator();
 
 const HomeScreen = ({ navigation }) => {
+
   const [loaded] = useFonts({
     MADTypeVariableBlack: require("./assets/fonts/MADTypeVariableBlack.otf"),
     NahdiBlack: require("./assets/fonts/NahdiBlack.ttf"),
@@ -29,50 +31,28 @@ const HomeScreen = ({ navigation }) => {
     return null;
   }
 
-  carouselItems: [
-    {
-      title: "Item 1",
-      text: "Text 1",
-    },
-    {
-      title: "Item 2",
-      text: "Text 2",
-    },
-    {
-      title: "Item 3",
-      text: "Text 3",
-    },
-    {
-      title: "Item 4",
-      text: "Text 4",
-    },
-    {
-      title: "Item 5",
-      text: "Text 5",
-    },
-  ]
-
-  _renderItem({item,index}){
-    return (
-      <View style={{
-          backgroundColor:'floralwhite',
-          borderRadius: 5,
-          height: 250,
-          padding: 50,
-          marginLeft: 25,
-          marginRight: 25, }}>
-        <Text style={{fontSize: 30}}>{item.title}</Text>
-        <Text>{item.text}</Text>
-      </View>
-
-    )
-      }
+  // images: [
+  //   require('./assets/images/featured1.gif'),        // Local image
+  //   require('./assets/images/featured2.gif'),
+  //   require('./assets/images/featured3.gif'),
+  //   require('./assets/images/featured4.jpg'),
+  //   require('./assets/images/featured5.gif'),
+  //   require('./assets/images/featured6.gif'),
+  //   require('./assets/images/featured7.jpg'),
+  // ]
 
   return (
     <View>
-      {/* <Card>
-        <Card.Image source={require("./assets/images/nahdi-logo-full.png")} />
-      </Card> */}
+      {/* <SliderBox
+        // images={images}
+        resizeMethod={'resize'}
+        resizeMode={'cover'}
+        dotColor="#42bdb3"
+        imageLoadingColor="#42bdb3"
+        ImageComponentStyle={{width: '97%', marginTop: 5, backgroundColor: '#fff'}}
+        autoplay='true'
+        circleLoop
+      /> */}
       {/* <Button
         title="Go to Jane's profile"
         onPress={() => navigation.navigate("Profile", { name: "Jane" })}
