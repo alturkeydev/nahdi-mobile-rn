@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,19 +8,28 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import { Icon, Card, ListItem } from "react-native-elements";
+import { Icon, SearchBar } from "react-native-elements";
 import { useFonts } from "expo-font";
 import * as Animatable from "react-native-animatable";
 import { SliderBox } from "react-native-image-slider-box";
-
 
 import "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
-const Stack = createStackNavigator();
-
+// Home screen
 const HomeScreen = ({ navigation }) => {
+  const [images, setImages] = useState([
+    require("./assets/images/featured1.gif"), // Local image
+    require("./assets/images/featured2.gif"),
+    require("./assets/images/featured3.gif"),
+    require("./assets/images/featured4.jpg"),
+    require("./assets/images/featured5.gif"),
+    require("./assets/images/featured6.gif"),
+    require("./assets/images/featured7.jpg"),
+  ]);
+
+  const [keywords, setKeyWords] = useState('');
 
   const [loaded] = useFonts({
     MADTypeVariableBlack: require("./assets/fonts/MADTypeVariableBlack.otf"),
@@ -31,28 +40,28 @@ const HomeScreen = ({ navigation }) => {
     return null;
   }
 
-  // images: [
-  //   require('./assets/images/featured1.gif'),        // Local image
-  //   require('./assets/images/featured2.gif'),
-  //   require('./assets/images/featured3.gif'),
-  //   require('./assets/images/featured4.jpg'),
-  //   require('./assets/images/featured5.gif'),
-  //   require('./assets/images/featured6.gif'),
-  //   require('./assets/images/featured7.jpg'),
-  // ]
-
   return (
     <View>
-      {/* <SliderBox
-        // images={images}
-        resizeMethod={'resize'}
-        resizeMode={'cover'}
+      <SearchBar
+        placeholder="Type Here..."
+        onChangeText={(value) => setKeyWords(value)}
+        value={keywords}
+      />
+      <SliderBox
+        images={images}
+        resizeMethod={"resize"}
+        resizeMode={"contain"}
         dotColor="#42bdb3"
+        inactiveDotColor="#90A4AE"
         imageLoadingColor="#42bdb3"
-        ImageComponentStyle={{width: '97%', marginTop: 5, backgroundColor: '#fff'}}
-        autoplay='true'
+        ImageComponentStyle={{
+          width: "97%",
+          marginTop: 5,
+          backgroundColor: "#fff",
+        }}
+        autoplay
         circleLoop
-      /> */}
+      />
       {/* <Button
         title="Go to Jane's profile"
         onPress={() => navigation.navigate("Profile", { name: "Jane" })}
@@ -60,9 +69,13 @@ const HomeScreen = ({ navigation }) => {
     </View>
   );
 };
+
+// Profile screen
 const ProfileScreen = ({ navigation, route }) => {
   return <Text>This is {route.params.name}'s profile</Text>;
 };
+
+const Stack = createStackNavigator();
 
 export default function App() {
   const [loaded] = useFonts({
