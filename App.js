@@ -20,12 +20,13 @@ import { createStackNavigator } from "@react-navigation/stack";
 // Home screen
 const HomeScreen = ({ navigation }) => {
   //FETCHING DATA LOGIC
-  const base64 = require("base-64");
-  async function searchAPI() {
+  async function searchAPI(keyWords) {
     try {
-      const searchTerm = "panadol";
+      const searchTerm = keyWords;
       const username = "alturkey.ya";
       const password = "Ya@123456";
+
+      const base64 = require("base-64");
 
       const headers = new Headers();
       headers.append(
@@ -33,8 +34,8 @@ const HomeScreen = ({ navigation }) => {
         "Basic " + base64.encode(`${username}:${password}`)
       );
 
-      console.log("searchTerm: " + searchTerm);
-      const resData = await fetch(
+      console.log("Keywords to search for in Nahdi's API: " + searchTerm);
+      const extractedSKUs = await fetch(
         `https://int.nahdi.sa/soa-infra/resources/default/ChatbotProductSearch!1.0/Search?Medicine_Name=${searchTerm}`,
         {
           headers: headers,
@@ -42,17 +43,140 @@ const HomeScreen = ({ navigation }) => {
       )
         .then((response) => response.text())
         .then((textResponse) => {
-          console.log(textResponse);
+          //Extract only the SKUs
+          return textResponse.match(/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]/g);
         })
         .catch((error) => {
           console.log(error);
         });
+
+      // console.log('SKUS')
+      // console.log(extractedSKUs);
+
+      let productResponse = await fetch(
+        `https://www.nahdionline.com/en/rest/V1/products/100594133`,
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: "Bearer " + "4r5lftsaiulgdgh9pigqjazqjt58lz5j",
+          },
+        }
+      )
+        .catch((error) => {
+          console.log(error);
+        });
+
+      if (!productResponse.ok) {
+        console.log('The product that was requested doesn\'t exist.');
+      } else {
+        productResponse = await productResponse.json();
+      }
+
+      // console.log(productResponse)
+
+      // //GET LINKED PRODUCTS SKUS
+      // let linkedProducts = [];
+      // for(var i = 0; i < productResponse.product_links.length; i++) {
+      //   linkedProducts.push(productResponse.product_links[i].linked_product_sku);
+      // }
+
+      // console.log(linkedProducts);
+
+      let customAttributes = {
+        description: '',
+        image: '',
+        url_key: '',
+        gift_message_available: '',
+        short_description: '',
+        meta_title: '',
+        gift_wrapping_available: '',
+        manufacturer: '',
+        msrp: '',
+        store_pickup_available: '',
+        upc: '',
+        is_returnable: '',
+        dc_only: '',
+        safety_stock_level: '',
+        alternative_product: '',
+        quantity: ''
+      };
+
+      productResponse.custom_attributes.filter(function (item) {
+        if (item.attribute_code === 'description')
+          customAttributes.description = item.value;
+
+        if (item.attribute_code === 'image')
+          customAttributes.image = item.value;
+
+        if (item.attribute_code === 'url_key')
+          customAttributes.url_key = item.value;
+
+        if (item.attribute_code === 'gift_message_available')
+          customAttributes.gift_message_available = item.value;
+
+        if (item.attribute_code === 'short_description')
+          customAttributes.short_description = item.value;
+
+        if (item.attribute_code === 'meta_title')
+          customAttributes.meta_title = item.value;
+
+        if (item.attribute_code === 'gift_wrapping_available')
+          customAttributes.gift_wrapping_available = item.value;
+
+        if (item.attribute_code === 'manufacturer')
+          customAttributes.manufacturer = item.value;
+
+        if (item.attribute_code === 'msrp')
+          customAttributes.msrp = item.value;
+
+        if (item.attribute_code === 'store_pickup_available')
+          customAttributes.store_pickup_available = item.value;
+
+        if (item.attribute_code === 'upc')
+          customAttributes.upc = item.value;
+
+        if (item.attribute_code === 'is_returnable')
+          customAttributes.is_returnable = item.value;
+
+        if (item.attribute_code === 'dc_only')
+          customAttributes.dc_only = item.value;
+
+        if (item.attribute_code === 'safety_stock_level')
+          customAttributes.safety_stock_level = item.value;
+
+        if (item.attribute_code === 'alternative_product')
+          customAttributes.alternative_product = item.value;
+
+        if (item.attribute_code === 'quantity')
+          customAttributes.quantity = item.value;
+        return;
+      })
+
+      console.log("\n\nPRODUCTS INFO\n\n")
+      console.log('Name: ', productResponse.name);
+      console.log('Desc: ', customAttributes.description);
+      console.log('Short desc: ', customAttributes.short_description);
+      console.log('Price: ', productResponse.price);
+      console.log('Status: ', productResponse.status === 1 ? 'Available' : 'Not available');
+      console.log('Updated: ', productResponse.updated_at);
+      console.log('Image url: ', `https://nahdionline.com/media/catalog/product${customAttributes.image}`);
+      console.log('Url key: ', `https://www.nahdionline.com/en/${customAttributes.url_key}`);
+      console.log('Gift message: ', customAttributes.gift_message_available === '0' ? 'There is no gift message for this product.' : customAttributes.gift_message_available);
+      console.log('Gift wrapping: ', customAttributes.gift_wrapping_available === '0' ? 'There is no gift wrapping for this product.' : customAttributes.gift_wrapping_available);
+      console.log('Manufacturer: ', customAttributes.manufacturer);
+      console.log('Store pickup: ', customAttributes.store_pickup_available === "1" ? 'Available for Store Pickup' : 'Not available for Store Pickup');
+      console.log('Returnable: ', customAttributes.is_returnable === '2' ? 'This product is not returnable.' : 'This product is returnable.');
+      console.log('DC only: ', customAttributes.dc_only === '0' ? 'This product is DC only.' : 'This product is not DC only.');
+      console.log('Alternative products: ', customAttributes.alternative_product);
+      console.log('Quantity: ', customAttributes.quantity);
+      console.log('SKU: ', productResponse.sku);
+
     } catch (err) {
       console.log(err);
     }
   }
 
-  console.log(searchAPI())
+  searchAPI('panadol');
 
   //Load custom fonts
   const [loaded] = useFonts({
@@ -115,7 +239,7 @@ const HomeScreen = ({ navigation }) => {
         containerStyle={styles.searchcontainer}
         inputStyle={styles.searchinput}
         lightTheme
-        searchIcon={<Icon name="search" type="font-awesome" />}
+        searchIcon={<Icon name="search" type="font-awesome" color="#90A4AE" />}
       />
       <SliderBox
         images={images}
@@ -171,20 +295,22 @@ export default function App() {
             headerTitleStyle: {
               fontFamily: "MADTypeVariableBlack",
             },
-            headerTintColor: "#278585",
+            headerStyle: {
+              backgroundColor: "#278585",
+            },
+            headerTintColor: "#fff",
             headerRight: () => (
-              <Icon
-                name="shopping-cart"
-                type="font-awesome"
-                color="#278585"
-                containerStyle={styles.iconcontainer}
-                onPress={() => console.log("hello")}
-              />
+              <TouchableOpacity>
+                <Image
+                  style={{ width: 30, height: 30, marginRight: 15 }}
+                  source={require("./assets/images/shopping-basket.png")}
+                />
+              </TouchableOpacity>
             ),
             headerLeft: () => (
               <TouchableOpacity>
                 <Image
-                  style={{ width: 30, height: 30, marginLeft: 15 }}
+                  style={{ width: 35, height: 35, marginLeft: 15 }}
                   source={require("./assets/images/icon.png")}
                 />
               </TouchableOpacity>
