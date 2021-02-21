@@ -42,21 +42,13 @@ const HomeScreen = ({ navigation }) => {
   keyExtractor = (item) => item.sku;
 
   renderItem = ({ item }) => (
-    // <Card
-    //   image={require("./assets/images/beach.png")}
-    //   imageStyle={{ height: 50 }}
-    //   containerStyle={[styles.card, { height: 200 }]}
-    // >
-    //   <Text style={{ margin: 10 }}>{item.text}</Text>
-    // </Card>
-
     <Card containerStyle={styles.card}>
       <Card.Title style={{ color: "#278585", fontSize: 12 }}>
         {item.status}
       </Card.Title>
       <Card.Divider />
-      <Card.Image source={{ uri: item.image }} />
-      <Text>{item.name}</Text>
+      <Card.Image source={{ uri: item.image === 'https://nahdionline.com/media/catalog/product' ? 'https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png' : item.image }} resizeMode={'contain'} />
+      <Text style={{fontSize: 16}} numberOfLines={2} ellipsizeMode='tail'>{item.name}</Text>
       <Text
         style={{
           textAlign: "center",
@@ -65,7 +57,7 @@ const HomeScreen = ({ navigation }) => {
           fontSize: 16,
         }}
       >
-        {item.price} SAR
+        {item.price === undefined ? '0' : item.price} SAR
       </Text>
       <View style={{ flex: 1, flexDirection: "row", marginTop: 20 }}>
         <View style={{ width: 50, height: 50, marginTop: 10 }}>
@@ -92,7 +84,7 @@ const HomeScreen = ({ navigation }) => {
       <TouchableHighlight
         underlayColor="#90A4AE"
         activeOpacity={0.6}
-        onPress={() => {}}
+        onPress={() => { }}
         style={{ backgroundColor: "#278585" }}
       >
         <View style={{ padding: 5 }}>
@@ -143,202 +135,207 @@ const HomeScreen = ({ navigation }) => {
       console.log("SKUS");
       console.log(extractedSKUs);
 
-      let productResponse = await fetch(
-        `https://www.nahdionline.com/en/rest/V1/products/${extractedSKUs[0]}`,
-        {
-          headers: {
-            Accept: "application/json",
-            Authorization: "Bearer " + "4yk1oridwoxkyeym5x255mpymfgx5xx0",
-          },
-        }
-      ).catch((error) => {
-        console.log(error);
-      });
+      let productList = [];
+      for (var i = 0; i < (extractedSKUs.length > 20 ? 20 : extractedSKUs.length); i++) {
+        let productResponse = await fetch(
+          `https://www.nahdionline.com/en/rest/V1/products/${extractedSKUs[i]}`,
+          {
+            headers: {
+              Accept: "application/json",
+              Authorization: "Bearer " + "z67qj8blz8eez6medzbfg0o34alxv7qc",
+            },
+          }
+        ).catch((error) => {
+          console.log(error);
+        });
 
-      if (!productResponse.ok) {
-        //Need to generate a new token. This need improvement for all cases!
-        console.log("Product fetch returned: ", productResponse.ok);
-        console.log(
-          "The product that was requested doesn't exist or the auth token has expired."
+        if (!productResponse.ok) {
+          //Need to generate a new token. This need improvement for all cases!
+          console.log("Product fetch returned: ", productResponse.ok);
+          console.log(
+            "The product that was requested doesn't exist or the auth token has expired."
+          );
+          continue;
+        } else {
+          productResponse = await productResponse.json();
+        }
+
+        let customAttributes = {
+          description: "",
+          image: "",
+          url_key: "",
+          gift_message_available: "",
+          short_description: "",
+          meta_title: "",
+          gift_wrapping_available: "",
+          manufacturer: "",
+          msrp: "",
+          store_pickup_available: "",
+          upc: "",
+          is_returnable: "",
+          dc_only: "",
+          safety_stock_level: "",
+          alternative_product: "",
+          quantity: "",
+        };
+
+        productResponse.custom_attributes.filter(function (item) {
+          if (item.attribute_code === "description")
+            customAttributes.description = item.value;
+
+          if (item.attribute_code === "image")
+            customAttributes.image = item.value;
+
+          if (item.attribute_code === "url_key")
+            customAttributes.url_key = item.value;
+
+          if (item.attribute_code === "gift_message_available")
+            customAttributes.gift_message_available = item.value;
+
+          if (item.attribute_code === "short_description")
+            customAttributes.short_description = item.value;
+
+          if (item.attribute_code === "meta_title")
+            customAttributes.meta_title = item.value;
+
+          if (item.attribute_code === "gift_wrapping_available")
+            customAttributes.gift_wrapping_available = item.value;
+
+          if (item.attribute_code === "manufacturer")
+            customAttributes.manufacturer = item.value;
+
+          if (item.attribute_code === "msrp") customAttributes.msrp = item.value;
+
+          if (item.attribute_code === "store_pickup_available")
+            customAttributes.store_pickup_available = item.value;
+
+          if (item.attribute_code === "upc") customAttributes.upc = item.value;
+
+          if (item.attribute_code === "is_returnable")
+            customAttributes.is_returnable = item.value;
+
+          if (item.attribute_code === "dc_only")
+            customAttributes.dc_only = item.value;
+
+          if (item.attribute_code === "safety_stock_level")
+            customAttributes.safety_stock_level = item.value;
+
+          if (item.attribute_code === "alternative_product")
+            customAttributes.alternative_product = item.value;
+
+          if (item.attribute_code === "quantity")
+            customAttributes.quantity = item.value;
+          return;
+        });
+
+        // console.log("\n\nPRODUCTS INFO\n\n");
+        // console.log("Name: ", productResponse.name);
+        // console.log("Desc: ", customAttributes.description);
+        // console.log("Short desc: ", customAttributes.short_description);
+        // console.log("Price: ", productResponse.price);
+        // console.log(
+        //   "Status: ",
+        //   productResponse.status === 1 ? "Available" : "Not available"
+        // );
+        // console.log("Updated: ", productResponse.updated_at);
+        // console.log(
+        //   "Image url: ",
+        //   `https://nahdionline.com/media/catalog/product${customAttributes.image}`
+        // );
+        // console.log(
+        //   "Url key: ",
+        //   `https://www.nahdionline.com/en/${customAttributes.url_key}`
+        // );
+        // console.log(
+        //   "Gift message: ",
+        //   customAttributes.gift_message_available === "0"
+        //     ? "There is no gift message for this product."
+        //     : customAttributes.gift_message_available
+        // );
+        // console.log(
+        //   "Gift wrapping: ",
+        //   customAttributes.gift_wrapping_available === "0"
+        //     ? "There is no gift wrapping for this product."
+        //     : customAttributes.gift_wrapping_available
+        // );
+        // console.log("Manufacturer: ", customAttributes.manufacturer);
+        // console.log(
+        //   "Store pickup: ",
+        //   customAttributes.store_pickup_available === "1"
+        //     ? "Available for Store Pickup"
+        //     : "Not available for Store Pickup"
+        // );
+        // console.log(
+        //   "Returnable: ",
+        //   customAttributes.is_returnable === "2"
+        //     ? "This product is not returnable."
+        //     : "This product is returnable."
+        // );
+        // console.log(
+        //   "DC only: ",
+        //   customAttributes.dc_only === "0"
+        //     ? "This product is DC only."
+        //     : "This product is not DC only."
+        // );
+        // console.log(
+        //   "Alternative products: ",
+        //   customAttributes.alternative_product
+        // );
+        // console.log("Quantity: ", customAttributes.quantity);
+        // console.log("SKU: ", productResponse.sku);
+
+        // data.push(
+        //   {
+        //   name: productResponse.name,
+        //   description: customAttributes.description,
+        //   short_description: customAttributes.short_description,
+        //   price: productResponse.price,
+        //   status: productResponse.status === 1 ? "Available" : "Not available",
+        //   updated_at: productResponse.updated_at,
+        //   image: `https://nahdionline.com/media/catalog/product${customAttributes.image}`,
+        //   url_key: `https://www.nahdionline.com/en/${customAttributes.url_key}`,
+        //   gift_message_available: customAttributes.gift_message_available,
+        //   gift_wrapping_available: customAttributes.gift_wrapping_available,
+        //   manufacturer: customAttributes.manufacturer,
+        //   store_pickup_available:
+        //     customAttributes.store_pickup_available === "1"
+        //       ? "Available for Store Pickup"
+        //       : "Not available for Store Pickup",
+        //   returnable: customAttributes.is_returnable,
+        //   dc_only: customAttributes.dc_only,
+        //   alternative_product: customAttributes.alternative_product,
+        //   quantity: customAttributes.quantity,
+        //   sku: productResponse.sku,
+        // });
+
+        productList.push(
+          {
+            name: productResponse.name,
+            description: customAttributes.description,
+            short_description: customAttributes.short_description,
+            price: productResponse.price,
+            status: productResponse.status === 1 ? "Available" : "Not available",
+            updated_at: productResponse.updated_at,
+            image: `https://nahdionline.com/media/catalog/product${customAttributes.image}`,
+            url_key: `https://www.nahdionline.com/en/${customAttributes.url_key}`,
+            gift_message_available: customAttributes.gift_message_available,
+            gift_wrapping_available: customAttributes.gift_wrapping_available,
+            manufacturer: customAttributes.manufacturer,
+            store_pickup_available:
+              customAttributes.store_pickup_available === "1"
+                ? "Available for Store Pickup"
+                : "Not available for Store Pickup",
+            returnable: customAttributes.is_returnable,
+            dc_only: customAttributes.dc_only,
+            alternative_product: customAttributes.alternative_product,
+            quantity: customAttributes.quantity,
+            sku: productResponse.sku,
+          }
         );
-        return;
-      } else {
-        productResponse = await productResponse.json();
       }
 
-      let customAttributes = {
-        description: "",
-        image: "",
-        url_key: "",
-        gift_message_available: "",
-        short_description: "",
-        meta_title: "",
-        gift_wrapping_available: "",
-        manufacturer: "",
-        msrp: "",
-        store_pickup_available: "",
-        upc: "",
-        is_returnable: "",
-        dc_only: "",
-        safety_stock_level: "",
-        alternative_product: "",
-        quantity: "",
-      };
-
-      productResponse.custom_attributes.filter(function (item) {
-        if (item.attribute_code === "description")
-          customAttributes.description = item.value;
-
-        if (item.attribute_code === "image")
-          customAttributes.image = item.value;
-
-        if (item.attribute_code === "url_key")
-          customAttributes.url_key = item.value;
-
-        if (item.attribute_code === "gift_message_available")
-          customAttributes.gift_message_available = item.value;
-
-        if (item.attribute_code === "short_description")
-          customAttributes.short_description = item.value;
-
-        if (item.attribute_code === "meta_title")
-          customAttributes.meta_title = item.value;
-
-        if (item.attribute_code === "gift_wrapping_available")
-          customAttributes.gift_wrapping_available = item.value;
-
-        if (item.attribute_code === "manufacturer")
-          customAttributes.manufacturer = item.value;
-
-        if (item.attribute_code === "msrp") customAttributes.msrp = item.value;
-
-        if (item.attribute_code === "store_pickup_available")
-          customAttributes.store_pickup_available = item.value;
-
-        if (item.attribute_code === "upc") customAttributes.upc = item.value;
-
-        if (item.attribute_code === "is_returnable")
-          customAttributes.is_returnable = item.value;
-
-        if (item.attribute_code === "dc_only")
-          customAttributes.dc_only = item.value;
-
-        if (item.attribute_code === "safety_stock_level")
-          customAttributes.safety_stock_level = item.value;
-
-        if (item.attribute_code === "alternative_product")
-          customAttributes.alternative_product = item.value;
-
-        if (item.attribute_code === "quantity")
-          customAttributes.quantity = item.value;
-        return;
-      });
-
-      // console.log("\n\nPRODUCTS INFO\n\n");
-      // console.log("Name: ", productResponse.name);
-      // console.log("Desc: ", customAttributes.description);
-      // console.log("Short desc: ", customAttributes.short_description);
-      // console.log("Price: ", productResponse.price);
-      // console.log(
-      //   "Status: ",
-      //   productResponse.status === 1 ? "Available" : "Not available"
-      // );
-      // console.log("Updated: ", productResponse.updated_at);
-      // console.log(
-      //   "Image url: ",
-      //   `https://nahdionline.com/media/catalog/product${customAttributes.image}`
-      // );
-      // console.log(
-      //   "Url key: ",
-      //   `https://www.nahdionline.com/en/${customAttributes.url_key}`
-      // );
-      // console.log(
-      //   "Gift message: ",
-      //   customAttributes.gift_message_available === "0"
-      //     ? "There is no gift message for this product."
-      //     : customAttributes.gift_message_available
-      // );
-      // console.log(
-      //   "Gift wrapping: ",
-      //   customAttributes.gift_wrapping_available === "0"
-      //     ? "There is no gift wrapping for this product."
-      //     : customAttributes.gift_wrapping_available
-      // );
-      // console.log("Manufacturer: ", customAttributes.manufacturer);
-      // console.log(
-      //   "Store pickup: ",
-      //   customAttributes.store_pickup_available === "1"
-      //     ? "Available for Store Pickup"
-      //     : "Not available for Store Pickup"
-      // );
-      // console.log(
-      //   "Returnable: ",
-      //   customAttributes.is_returnable === "2"
-      //     ? "This product is not returnable."
-      //     : "This product is returnable."
-      // );
-      // console.log(
-      //   "DC only: ",
-      //   customAttributes.dc_only === "0"
-      //     ? "This product is DC only."
-      //     : "This product is not DC only."
-      // );
-      // console.log(
-      //   "Alternative products: ",
-      //   customAttributes.alternative_product
-      // );
-      // console.log("Quantity: ", customAttributes.quantity);
-      // console.log("SKU: ", productResponse.sku);
-
-      // data.push(
-      //   {
-      //   name: productResponse.name,
-      //   description: customAttributes.description,
-      //   short_description: customAttributes.short_description,
-      //   price: productResponse.price,
-      //   status: productResponse.status === 1 ? "Available" : "Not available",
-      //   updated_at: productResponse.updated_at,
-      //   image: `https://nahdionline.com/media/catalog/product${customAttributes.image}`,
-      //   url_key: `https://www.nahdionline.com/en/${customAttributes.url_key}`,
-      //   gift_message_available: customAttributes.gift_message_available,
-      //   gift_wrapping_available: customAttributes.gift_wrapping_available,
-      //   manufacturer: customAttributes.manufacturer,
-      //   store_pickup_available:
-      //     customAttributes.store_pickup_available === "1"
-      //       ? "Available for Store Pickup"
-      //       : "Not available for Store Pickup",
-      //   returnable: customAttributes.is_returnable,
-      //   dc_only: customAttributes.dc_only,
-      //   alternative_product: customAttributes.alternative_product,
-      //   quantity: customAttributes.quantity,
-      //   sku: productResponse.sku,
-      // });
-
-      setData([
-        ...data,
-        {
-          name: productResponse.name,
-          description: customAttributes.description,
-          short_description: customAttributes.short_description,
-          price: productResponse.price,
-          status: productResponse.status === 1 ? "Available" : "Not available",
-          updated_at: productResponse.updated_at,
-          image: `https://nahdionline.com/media/catalog/product${customAttributes.image}`,
-          url_key: `https://www.nahdionline.com/en/${customAttributes.url_key}`,
-          gift_message_available: customAttributes.gift_message_available,
-          gift_wrapping_available: customAttributes.gift_wrapping_available,
-          manufacturer: customAttributes.manufacturer,
-          store_pickup_available:
-            customAttributes.store_pickup_available === "1"
-              ? "Available for Store Pickup"
-              : "Not available for Store Pickup",
-          returnable: customAttributes.is_returnable,
-          dc_only: customAttributes.dc_only,
-          alternative_product: customAttributes.alternative_product,
-          quantity: customAttributes.quantity,
-          sku: productResponse.sku,
-        }
-      ])
+      setData(productList);
+      
     } catch (err) {
       console.log(err);
     }
@@ -349,11 +346,12 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={{backgroundColor: '#fff'}}>
+    <View style={{ backgroundColor: '#fff' }}>
       <SearchBar
         placeholder="What are you looking for?"
         onChangeText={(value) => setKeyWords(value)}
         onSubmitEditing={() => {
+          setData([]);
           searchAPI(keywords);
         }}
         value={keywords}
@@ -480,7 +478,7 @@ const styles = StyleSheet.create({
   },
   list: {
     justifyContent: "space-around",
-    paddingBottom: 300,
+    paddingBottom: 350,
   },
   column: {
     flexShrink: 1,
