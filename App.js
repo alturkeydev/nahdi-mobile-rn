@@ -103,7 +103,7 @@ const HomeScreen = ({ navigation }) => {
           {
             headers: {
               Accept: "application/json",
-              Authorization: "Bearer " + "kmdw6ud7as4l3vo6zmoxx2lf42po5fn1",
+              Authorization: "Bearer " + "mmtssjnvjisveytr3gbmqfe0q8ht1d1p",
             },
           }
         ).catch((error) => {
@@ -112,9 +112,8 @@ const HomeScreen = ({ navigation }) => {
 
         if (!productResponse.ok) {
           //Need to generate a new token. This need improvement for all cases!
-          console.log("Product fetch returned: ", productResponse.ok);
           console.log(
-            "The product that was requested doesn't exist or the auth token has expired."
+            `The product with SKU: ${extractedSKUs[i]} doesn't exist or the auth token has expired.`
           );
           continue;
         } else {
@@ -141,7 +140,7 @@ const HomeScreen = ({ navigation }) => {
         };
 
         productResponse.custom_attributes.filter(function (item) {
-          if (item.attribute_code === "description")
+          if (item.attribute_code === "meta_description")
             customAttributes.description = item.value;
 
           if (item.attribute_code === "image")
@@ -319,7 +318,7 @@ const PDPScreen = ({ navigation, route }) => {
                   : route.params.product.image,
             }}
             resizeMode={"contain"}
-            style={{ width: 400, height: 400 }}
+            style={{ width: 256, height: 256 }}
           />
         </TouchableOpacity>
         <View
