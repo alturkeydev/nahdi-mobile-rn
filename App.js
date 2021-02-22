@@ -9,6 +9,8 @@ import {
   TouchableHighlight,
   FlatList,
   Dimensions,
+  SafeAreaView,
+  ScrollView,
 } from "react-native";
 
 import { Icon, SearchBar, Card } from "react-native-elements";
@@ -17,6 +19,10 @@ import { SliderBox } from "react-native-image-slider-box";
 import "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import BottomToolbar from "react-native-bottom-toolbar";
+
+import ProductCard from "./ProductCard";
+import withBadge from "./withBadge";
 
 // Home screen
 const HomeScreen = ({ navigation }) => {
@@ -41,63 +47,13 @@ const HomeScreen = ({ navigation }) => {
 
   keyExtractor = (item) => item.sku;
 
-  renderItem = ({ item }) => (
-    <Card containerStyle={styles.card}>
-      <Card.Title style={{ color: "#278585", fontSize: 12 }}>
-        {item.status}
-      </Card.Title>
-      <Card.Divider />
-      <Card.Image source={{ uri: item.image === 'https://nahdionline.com/media/catalog/product' ? 'https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png' : item.image }} resizeMode={'contain'} />
-      <Text style={{fontSize: 16}} numberOfLines={2} ellipsizeMode='tail'>{item.name}</Text>
-      <Text
-        style={{
-          textAlign: "center",
-          paddingTop: 15,
-          color: "#278585",
-          fontSize: 16,
-        }}
-      >
-        {item.price === undefined ? '0' : item.price} SAR
-      </Text>
-      <View style={{ flex: 1, flexDirection: "row", marginTop: 20 }}>
-        <View style={{ width: 50, height: 50, marginTop: 10 }}>
-          <Icon name="minus" type="font-awesome" color="#278585" size={20} />
-        </View>
-        <View style={{ width: 50, height: 50 }}>
-          <Text
-            style={{
-              textAlign: "center",
-              fontSize: 24,
-              color: "#278585",
-              fontWeight: "bold",
-              borderColor: "#278585",
-              borderWidth: 1,
-            }}
-          >
-            1
-          </Text>
-        </View>
-        <View style={{ width: 50, height: 50, marginTop: 10 }}>
-          <Icon name="plus" type="font-awesome" color="#278585" size={20} />
-        </View>
-      </View>
-      <TouchableHighlight
-        underlayColor="#90A4AE"
-        activeOpacity={0.6}
-        onPress={() => { }}
-        style={{ backgroundColor: "#278585" }}
-      >
-        <View style={{ padding: 5 }}>
-          <Icon
-            name="shopping-cart"
-            type="font-awesome"
-            color="#fff"
-            size={25}
-          />
-        </View>
-      </TouchableHighlight>
-    </Card>
-  );
+  const testNavigation = (index) => {
+    navigation.navigate("PDP", { product: data[index] });
+  };
+
+  renderItem = ({ item }) => {
+    return <ProductCard item={item} testNavigation={testNavigation} />;
+  };
 
   //FETCHING DATA LOGIC
   async function searchAPI(keyWords) {
@@ -136,13 +92,18 @@ const HomeScreen = ({ navigation }) => {
       console.log(extractedSKUs);
 
       let productList = [];
-      for (var i = 0; i < (extractedSKUs.length > 20 ? 20 : extractedSKUs.length); i++) {
+      let index = 0;
+      for (
+        var i = 0;
+        i < (extractedSKUs.length > 20 ? 20 : extractedSKUs.length);
+        i++
+      ) {
         let productResponse = await fetch(
           `https://www.nahdionline.com/en/rest/V1/products/${extractedSKUs[i]}`,
           {
             headers: {
               Accept: "application/json",
-              Authorization: "Bearer " + "z67qj8blz8eez6medzbfg0o34alxv7qc",
+              Authorization: "Bearer " + "kmdw6ud7as4l3vo6zmoxx2lf42po5fn1",
             },
           }
         ).catch((error) => {
@@ -204,7 +165,8 @@ const HomeScreen = ({ navigation }) => {
           if (item.attribute_code === "manufacturer")
             customAttributes.manufacturer = item.value;
 
-          if (item.attribute_code === "msrp") customAttributes.msrp = item.value;
+          if (item.attribute_code === "msrp")
+            customAttributes.msrp = item.value;
 
           if (item.attribute_code === "store_pickup_available")
             customAttributes.store_pickup_available = item.value;
@@ -228,114 +190,32 @@ const HomeScreen = ({ navigation }) => {
           return;
         });
 
-        // console.log("\n\nPRODUCTS INFO\n\n");
-        // console.log("Name: ", productResponse.name);
-        // console.log("Desc: ", customAttributes.description);
-        // console.log("Short desc: ", customAttributes.short_description);
-        // console.log("Price: ", productResponse.price);
-        // console.log(
-        //   "Status: ",
-        //   productResponse.status === 1 ? "Available" : "Not available"
-        // );
-        // console.log("Updated: ", productResponse.updated_at);
-        // console.log(
-        //   "Image url: ",
-        //   `https://nahdionline.com/media/catalog/product${customAttributes.image}`
-        // );
-        // console.log(
-        //   "Url key: ",
-        //   `https://www.nahdionline.com/en/${customAttributes.url_key}`
-        // );
-        // console.log(
-        //   "Gift message: ",
-        //   customAttributes.gift_message_available === "0"
-        //     ? "There is no gift message for this product."
-        //     : customAttributes.gift_message_available
-        // );
-        // console.log(
-        //   "Gift wrapping: ",
-        //   customAttributes.gift_wrapping_available === "0"
-        //     ? "There is no gift wrapping for this product."
-        //     : customAttributes.gift_wrapping_available
-        // );
-        // console.log("Manufacturer: ", customAttributes.manufacturer);
-        // console.log(
-        //   "Store pickup: ",
-        //   customAttributes.store_pickup_available === "1"
-        //     ? "Available for Store Pickup"
-        //     : "Not available for Store Pickup"
-        // );
-        // console.log(
-        //   "Returnable: ",
-        //   customAttributes.is_returnable === "2"
-        //     ? "This product is not returnable."
-        //     : "This product is returnable."
-        // );
-        // console.log(
-        //   "DC only: ",
-        //   customAttributes.dc_only === "0"
-        //     ? "This product is DC only."
-        //     : "This product is not DC only."
-        // );
-        // console.log(
-        //   "Alternative products: ",
-        //   customAttributes.alternative_product
-        // );
-        // console.log("Quantity: ", customAttributes.quantity);
-        // console.log("SKU: ", productResponse.sku);
-
-        // data.push(
-        //   {
-        //   name: productResponse.name,
-        //   description: customAttributes.description,
-        //   short_description: customAttributes.short_description,
-        //   price: productResponse.price,
-        //   status: productResponse.status === 1 ? "Available" : "Not available",
-        //   updated_at: productResponse.updated_at,
-        //   image: `https://nahdionline.com/media/catalog/product${customAttributes.image}`,
-        //   url_key: `https://www.nahdionline.com/en/${customAttributes.url_key}`,
-        //   gift_message_available: customAttributes.gift_message_available,
-        //   gift_wrapping_available: customAttributes.gift_wrapping_available,
-        //   manufacturer: customAttributes.manufacturer,
-        //   store_pickup_available:
-        //     customAttributes.store_pickup_available === "1"
-        //       ? "Available for Store Pickup"
-        //       : "Not available for Store Pickup",
-        //   returnable: customAttributes.is_returnable,
-        //   dc_only: customAttributes.dc_only,
-        //   alternative_product: customAttributes.alternative_product,
-        //   quantity: customAttributes.quantity,
-        //   sku: productResponse.sku,
-        // });
-
-        productList.push(
-          {
-            name: productResponse.name,
-            description: customAttributes.description,
-            short_description: customAttributes.short_description,
-            price: productResponse.price,
-            status: productResponse.status === 1 ? "Available" : "Not available",
-            updated_at: productResponse.updated_at,
-            image: `https://nahdionline.com/media/catalog/product${customAttributes.image}`,
-            url_key: `https://www.nahdionline.com/en/${customAttributes.url_key}`,
-            gift_message_available: customAttributes.gift_message_available,
-            gift_wrapping_available: customAttributes.gift_wrapping_available,
-            manufacturer: customAttributes.manufacturer,
-            store_pickup_available:
-              customAttributes.store_pickup_available === "1"
-                ? "Available for Store Pickup"
-                : "Not available for Store Pickup",
-            returnable: customAttributes.is_returnable,
-            dc_only: customAttributes.dc_only,
-            alternative_product: customAttributes.alternative_product,
-            quantity: customAttributes.quantity,
-            sku: productResponse.sku,
-          }
-        );
+        productList.push({
+          name: productResponse.name,
+          description: customAttributes.description,
+          short_description: customAttributes.short_description,
+          price: productResponse.price,
+          status: productResponse.status === 1 ? "Available" : "Not available",
+          updated_at: productResponse.updated_at,
+          image: `https://nahdionline.com/media/catalog/product${customAttributes.image}`,
+          url_key: `https://www.nahdionline.com/en/${customAttributes.url_key}`,
+          gift_message_available: customAttributes.gift_message_available,
+          gift_wrapping_available: customAttributes.gift_wrapping_available,
+          manufacturer: customAttributes.manufacturer,
+          store_pickup_available:
+            customAttributes.store_pickup_available === "1"
+              ? "Available for Store Pickup"
+              : "Not available for Store Pickup",
+          returnable: customAttributes.is_returnable,
+          dc_only: customAttributes.dc_only,
+          alternative_product: customAttributes.alternative_product,
+          quantity: customAttributes.quantity,
+          sku: productResponse.sku,
+          index: index++,
+        });
       }
 
       setData(productList);
-      
     } catch (err) {
       console.log(err);
     }
@@ -346,7 +226,7 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={{ backgroundColor: '#fff' }}>
+    <View style={{ backgroundColor: "#fff" }}>
       <SearchBar
         placeholder="What are you looking for?"
         onChangeText={(value) => setKeyWords(value)}
@@ -374,10 +254,11 @@ const HomeScreen = ({ navigation }) => {
             textAlign: "center",
             padding: 10,
             fontWeight: "bold",
+            textDecorationLine: "underline",
           }}
         >
-          استخدم كود Nahdi25 واستمتع بخصم إضافي 25 ريال عند التسوق ب 250. تطبق
-          الشروط والأحكام
+          Use "Nahdi25" for an extra discount 25 SR off when you buy with 250.
+          T&C apply.
         </Text>
       </TouchableHighlight>
       <SliderBox
@@ -408,9 +289,170 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-// Profile screen
-const ProfileScreen = ({ navigation, route }) => {
-  return <Text>janes' profile</Text>;
+// PDP screen
+const PDPScreen = ({ navigation, route }) => {
+  return (
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: "#fff",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <ScrollView
+        style={{ marginHorizontal: 20 }}
+        contentContainerStyle={{
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+      >
+        <TouchableOpacity>
+          <Image
+            source={{
+              uri:
+                route.params.product.image ===
+                "https://nahdionline.com/media/catalog/product"
+                  ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
+                  : route.params.product.image,
+            }}
+            resizeMode={"contain"}
+            style={{ width: 400, height: 400 }}
+          />
+        </TouchableOpacity>
+        <View
+            style={{
+              flexDirection: "row",
+              marginTop: 20,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <View style={{ width: 50, height: 50 }}>
+            <Icon
+                reverse
+                name="truck"
+                type="font-awesome"
+                color="#278585"
+                size={20}
+                // onPress={() => setQuantity(quantity + 1)}
+              />
+            </View>
+            <View style={{ width: 50, height: 50 }}>
+            <Icon
+                reverse
+                name="shopping-basket"
+                type="font-awesome"
+                color="#278585"
+                size={20}
+                // onPress={() => setQuantity(quantity + 1)}
+              />
+            </View>
+            <View style={{ width: 50, height: 50 }}>
+            <Icon
+                reverse
+                name="thumbs-up"
+                type="font-awesome"
+                color="#278585"
+                size={20}
+                // onPress={() => setQuantity(quantity + 1)}
+              />
+            </View>
+          </View>
+        <View>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{
+              textAlign: "center",
+              fontFamily: "MADTypeVariableBlack",
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "#278585",
+              paddingVertical: 20,
+            }}
+          >
+            {route.params.product.short_description}
+          </Text>
+          <Text
+            style={{
+              textAlign: "center",
+              fontSize: 20,
+              color: "#278585",
+            }}
+          >
+            {route.params.product.price} SAR
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              marginTop: 20,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <View style={{ width: 50, height: 50, marginTop: 20 }}>
+              <Icon
+                name="minus"
+                type="font-awesome"
+                color="#278585"
+                size={20}
+                // onPress={() => setQuantity(quantity - 1)}
+              />
+            </View>
+            <View style={{ width: 50, height: 50 }}>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 24,
+                  color: "#278585",
+                  fontWeight: "bold",
+                  borderColor: "#278585",
+                  borderWidth: 1,
+                }}
+              >
+                1
+              </Text>
+            </View>
+            <View style={{ width: 50, height: 50, marginTop: 20 }}>
+              <Icon
+                name="plus"
+                type="font-awesome"
+                color="#278585"
+                size={20}
+                // onPress={() => setQuantity(quantity + 1)}
+              />
+            </View>
+          </View>
+          <Text>{route.params.product.description}</Text>
+        </View>
+      </ScrollView>
+      <BottomToolbar wrapperStyle={{backgroundColor: "#278585", width: '100%', justifyContent: 'center', alignItems: 'center'}}>
+        <BottomToolbar.Action
+        title='Add to Cart'
+          IconElement={
+            <TouchableHighlight
+            style={{width: 500}}
+            underlayColor="#90A4AE"
+            activeOpacity={0.6}
+          >
+            <View style={{ padding: 5 }}>
+              <Icon
+                name="shopping-cart"
+                type="font-awesome"
+                color="#fff"
+                size={30}
+                onPress={() => console.log('clicked ')}
+              />
+            </View>
+          </TouchableHighlight>
+          }
+        />
+      </BottomToolbar>
+    </SafeAreaView>
+  );
 };
 
 const Stack = createStackNavigator();
@@ -420,6 +462,8 @@ export default function App() {
     MADTypeVariableBlack: require("./assets/fonts/MADTypeVariableBlack.otf"),
     NahdiBlack: require("./assets/fonts/NahdiBlack.ttf"),
   });
+
+  let BadgedIcon = withBadge(1)(Icon);
 
   if (!loaded) {
     return null;
@@ -441,9 +485,12 @@ export default function App() {
             headerTintColor: "#fff",
             headerRight: () => (
               <TouchableOpacity>
-                <Image
-                  style={{ width: 30, height: 30, marginRight: 15 }}
-                  source={require("./assets/images/shopping-basket.png")}
+                <BadgedIcon
+                  name="shopping-cart"
+                  type="font-awesome"
+                  color="#fff"
+                  size={28}
+                  style={{ paddingRight: 15, paddingBottom: 3 }}
                 />
               </TouchableOpacity>
             ),
@@ -458,11 +505,30 @@ export default function App() {
           }}
         />
         <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{
+          name="PDP"
+          component={PDPScreen}
+          options={({ route }) => ({
+            title: route.params.product.name,
             headerTintColor: "#278585",
-          }}
+            headerTitleStyle: {
+              fontFamily: "MADTypeVariableBlack",
+            },
+            headerStyle: {
+              backgroundColor: "#278585",
+            },
+            headerTintColor: "#fff",
+            headerRight: () => (
+              <TouchableOpacity>
+                <BadgedIcon
+                  name="shopping-cart"
+                  type="font-awesome"
+                  color="#fff"
+                  size={28}
+                  style={{ paddingRight: 15, paddingBottom: 3 }}
+                />
+              </TouchableOpacity>
+            ),
+          })}
         />
       </Stack.Navigator>
     </NavigationContainer>
