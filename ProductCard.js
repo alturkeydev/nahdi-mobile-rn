@@ -21,7 +21,7 @@ class ProductCard extends React.PureComponent {
     return (
       <TouchableOpacity activeOpacity={0.6} onPress={() => testNavigation(item.index)}>
         <Card containerStyle={styles.card}>
-          <Card.Title style={{ color: "#278585", fontSize: 12 }}>
+          <Card.Title style={{ color: "#278585", fontSize: 12, fontFamily: "MADTypeVariableBlack" }}>
             {item.status}
           </Card.Title>
           <Card.Divider />
@@ -35,7 +35,7 @@ class ProductCard extends React.PureComponent {
             }}
             resizeMode={"contain"}
           />
-          <Text style={{ fontSize: 16 }} numberOfLines={2} ellipsizeMode="tail">
+          <Text style={{ fontSize: 16,fontFamily: "MADTypeVariableBlack", color: "#90A4AE" }} numberOfLines={2} ellipsizeMode="tail">
             {item.name}
           </Text>
           <Text
@@ -44,6 +44,7 @@ class ProductCard extends React.PureComponent {
               paddingTop: 15,
               color: "#278585",
               fontSize: 16,
+              fontFamily: "MADTypeVariableBlack"
             }}
           >
             {item.price === undefined ? "0" : item.price} SAR
@@ -67,6 +68,7 @@ class ProductCard extends React.PureComponent {
                   fontWeight: "bold",
                   borderColor: "#278585",
                   borderWidth: 1,
+                  fontFamily: "MADTypeVariableBlack"
                 }}
               >
                 1
