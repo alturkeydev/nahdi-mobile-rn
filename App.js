@@ -56,8 +56,10 @@ const HomeScreen = ({ navigation }) => {
 
   //Nahdi Auth Token
   const [authToken, setAuthToken] = useState(
-    "3ardmf5hehij87kaea966hguohjpe6r0"
+    "q26tpq3g9jlegynp5afbt1lobfo3uc8h"
   );
+
+  const [searchTime, setSearchTime] = useState();
 
   keyExtractor = (item) => item.sku;
 
@@ -76,6 +78,8 @@ const HomeScreen = ({ navigation }) => {
     setTimeout(() => {
       timedOut = true;
     }, 35000);
+
+    let currDate = new Date();
 
     try {
       const searchTerm = keyWords;
@@ -107,6 +111,16 @@ const HomeScreen = ({ navigation }) => {
         .catch((error) => {
           console.log(error);
         });
+
+      if (!extractedSKUs) {
+        Toast.show({
+          text1: "Invalid Search Term",
+          text2: `This API doesn't support looking up: \"${searchTerm}\".`,
+          // type: 'info',
+          position: "bottom",
+          bottomOffset: 60,
+        });
+      }
 
       console.log("Limiting SKUs to 20...");
       extractedSKUs = extractedSKUs.slice(0, 10);
@@ -322,6 +336,15 @@ const HomeScreen = ({ navigation }) => {
       }
 
       setData(productList);
+
+      Toast.show({
+        text1: "Fetch Duration",
+        text2: `Data fetch took about ${((new Date() - currDate) / 1000.0).toFixed(2)}s to complete ⚡.`,
+        // type: 'info',
+        position: "bottom",
+        bottomOffset: 60,
+      });
+
     } catch (err) {
       console.log(err);
     }
@@ -437,7 +460,7 @@ const PDPScreen = ({ navigation, route }) => {
             source={{
               uri:
                 route.params.product.image ===
-                "https://nahdionline.com/media/catalog/product"
+                  "https://nahdionline.com/media/catalog/product"
                   ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
                   : route.params.product.image,
             }}
@@ -693,7 +716,7 @@ const PDPScreen = ({ navigation, route }) => {
             onPress={() => {
               Toast.show({
                 text1: "Review Not Available",
-                text2: "Sorry, PoC doesn't support reviewing products.",
+                text2: "This feature is not currently implemented.",
                 position: "bottom",
                 bottomOffset: 60,
               });
@@ -751,7 +774,7 @@ const PDPScreen = ({ navigation, route }) => {
                           source={{
                             uri:
                               route.params.product.relatedProducts[0].image ===
-                              "https://nahdionline.com/media/catalog/product"
+                                "https://nahdionline.com/media/catalog/product"
                                 ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
                                 : route.params.product.relatedProducts[0].image,
                           }}
@@ -785,7 +808,7 @@ const PDPScreen = ({ navigation, route }) => {
                           source={{
                             uri:
                               route.params.product.relatedProducts[0].image ===
-                              "https://nahdionline.com/media/catalog/product"
+                                "https://nahdionline.com/media/catalog/product"
                                 ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
                                 : route.params.product.relatedProducts[0].image,
                           }}
@@ -819,7 +842,7 @@ const PDPScreen = ({ navigation, route }) => {
             type="font-awesome"
             color="#278585"
             size={20}
-            // onPress={() => setQuantity(quantity - 1)}
+          // onPress={() => setQuantity(quantity - 1)}
           />
         </View>
         <View style={{ width: 50, height: 50 }}>
@@ -843,7 +866,7 @@ const PDPScreen = ({ navigation, route }) => {
             type="font-awesome"
             color="#278585"
             size={20}
-            // onPress={() => setQuantity(quantity + 1)}
+          // onPress={() => setQuantity(quantity + 1)}
           />
         </View>
       </View>
