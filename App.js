@@ -33,6 +33,9 @@ import { TextInput } from "react-native-gesture-handler";
 
 LogBox.ignoreLogs(["Setting a timer"]);
 
+let cart = { count: 0 };
+let cartList = [];
+
 // Home screen
 const HomeScreen = ({ navigation }) => {
   //Load custom fonts
@@ -56,23 +59,30 @@ const HomeScreen = ({ navigation }) => {
 
   //Nahdi Auth Token
   const [authToken, setAuthToken] = useState(
-    "q26tpq3g9jlegynp5afbt1lobfo3uc8h"
+    "m3h35qnanj379tbt8g7alw84c4mzk503"
   );
-
-  const [searchTime, setSearchTime] = useState();
 
   keyExtractor = (item) => item.sku;
 
-  const testNavigation = (index) => {
+  const navigationHandler = (index) => {
     navigation.navigate("PDP", { product: data[index] });
   };
 
   renderItem = ({ item }) => {
-    return <ProductCard item={item} testNavigation={testNavigation} />;
+    return (
+      <ProductCard
+        item={item}
+        navigationHandler={navigationHandler}
+        cartList={cartList}
+        cart={cart}
+        navigation={navigation}
+      />
+    );
   };
 
   //FETCHING DATA LOGIC
   async function searchAPI(keyWords) {
+    console.log("cartList", cart.count);
     let timedOut = false;
 
     setTimeout(() => {
@@ -122,9 +132,9 @@ const HomeScreen = ({ navigation }) => {
         });
       }
 
-      console.log("Limiting SKUs to 20...");
-      extractedSKUs = extractedSKUs.slice(0, 10);
-      console.log("SKUs");
+      console.log("Limiting SKUs to 15...");
+      extractedSKUs = extractedSKUs.slice(0, 15);
+      console.log(`${searchTerm} top 15 SKUs`);
       console.log(extractedSKUs);
 
       let productList = [];
@@ -245,67 +255,106 @@ const HomeScreen = ({ navigation }) => {
         if (arAlternativeProducts.length > 2)
           arAlternativeProducts = arAlternativeProducts.slice(0, 2);
 
-        console.log(arAlternativeProducts);
+        if (arAlternativeProducts[0] === "") arAlternativeProducts = null;
 
-        for (let i = 0; i < arAlternativeProducts.length; i++) {
-          if (timedOut) return;
+        if (arAlternativeProducts !== null) {
+          if (arAlternativeProducts[1] === "")
+            arAlternativeProducts = arAlternativeProducts.slice(0, 1);
 
-          let relatedProductResponse = await fetch(
-            `https://www.nahdionline.com/en/rest/V1/products/${arAlternativeProducts[i]}`,
-            {
-              headers: {
-                Accept: "application/json",
-                Authorization: "Bearer " + authToken,
-              },
+          console.log(`Related ${extractedSKUs[i]} SKUs`);
+          console.log(arAlternativeProducts);
+
+          for (let i = 0; i < arAlternativeProducts.length; i++) {
+            if (timedOut) return;
+
+            let relatedProductResponse = await fetch(
+              `https://www.nahdionline.com/en/rest/V1/products/${arAlternativeProducts[i]}`,
+              {
+                headers: {
+                  Accept: "application/json",
+                  Authorization: "Bearer " + authToken,
+                },
+              }
+            ).catch((error) => {
+              console.log(error);
+            });
+
+            if (!relatedProductResponse.ok) {
+              //Need to generate a new token. This needs improvement for all cases!
+              console.log(
+                `The product with SKU: ${arAlternativeProducts[i]} doesn't exist or the auth token has expired.`
+              );
+              continue;
+            } else {
+              relatedProductResponse = await relatedProductResponse.json();
             }
-          ).catch((error) => {
-            console.log(error);
-          });
 
-          if (!relatedProductResponse.ok) {
-            //Need to generate a new token. This needs improvement for all cases!
-            console.log(
-              `The product with SKU: ${extractedSKUs[i]} doesn't exist or the auth token has expired.`
-            );
-            continue;
-          } else {
-            relatedProductResponse = await relatedProductResponse.json();
+            let relatedCustomAttributes = {
+              name: "",
+              image: "",
+              url_key: "",
+              short_description: "",
+              meta_title: "",
+              price: "",
+              sku: "",
+            };
+
+            relatedProductResponse.custom_attributes.filter(function (item) {
+              if (item.attribute_code === "image")
+                relatedCustomAttributes.image = item.value;
+
+              if (item.attribute_code === "url_key")
+                relatedCustomAttributes.url_key = item.value;
+
+              if (item.attribute_code === "short_description")
+                relatedCustomAttributes.short_description = item.value;
+
+              if (item.attribute_code === "meta_title")
+                relatedCustomAttributes.meta_title = item.value;
+
+              return;
+            });
+
+            relatedProductsData.push({
+              name: relatedProductResponse.name,
+              image: `https://nahdionline.com/media/catalog/product${relatedCustomAttributes.image}`,
+              url_key: `https://www.nahdionline.com/en/${relatedCustomAttributes.url_key}`,
+              short_description: relatedCustomAttributes.short_description,
+              meta_title: relatedCustomAttributes.meta_title,
+              price: relatedProductResponse.price,
+              sku: relatedProductResponse.sku,
+            });
+
+            if (arAlternativeProducts.length === 1) {
+              relatedProductsData.push({
+                name: "Panadol-Actifast 500 mg Tablet 20pcs",
+                image: `https://nahdionline.com/media/catalog/product${"/1/0/100011680_0.jpg"}`,
+                url_key: `https://www.nahdionline.com/en/${"panadol-actifast-500-mg-tablet-20pcs"}`,
+                short_description: "Panadol-Actifast 500 mg Tablet 20pcs",
+                meta_title: "Panadol-Actifast 500 mg Tablet 20pcs",
+                price: 7.95,
+                sku: "100011680",
+              });
+            }
           }
-
-          let relatedCustomAttributes = {
-            name: "",
-            image: "",
-            url_key: "",
-            short_description: "",
-            meta_title: "",
-            price: "",
-            sku: "",
-          };
-
-          relatedProductResponse.custom_attributes.filter(function (item) {
-            if (item.attribute_code === "image")
-              relatedCustomAttributes.image = item.value;
-
-            if (item.attribute_code === "url_key")
-              relatedCustomAttributes.url_key = item.value;
-
-            if (item.attribute_code === "short_description")
-              relatedCustomAttributes.short_description = item.value;
-
-            if (item.attribute_code === "meta_title")
-              relatedCustomAttributes.meta_title = item.value;
-
-            return;
-          });
-
+        } else {
           relatedProductsData.push({
-            name: relatedProductResponse.name,
-            image: `https://nahdionline.com/media/catalog/product${relatedCustomAttributes.image}`,
-            url_key: `https://www.nahdionline.com/en/${relatedCustomAttributes.url_key}`,
-            short_description: relatedCustomAttributes.short_description,
-            meta_title: relatedCustomAttributes.meta_title,
-            price: relatedProductResponse.price,
-            sku: relatedProductResponse.sku,
+            name: "Panadol-Extend 665 mg Tablet 18pcs",
+            image: `https://nahdionline.com/media/catalog/product${"/1/0/100009951_0.jpg"}`,
+            url_key: `https://www.nahdionline.com/en/${"panadol-extend-665-mg-tablet-18pcs"}`,
+            short_description: "Panadol-Extend 665 mg Tablet 18pcs",
+            meta_title: "Panadol-Extend 665 mg Tablet 18pcs",
+            price: 10.3,
+            sku: "100009951",
+          });
+          relatedProductsData.push({
+            name: "Panadol-Actifast 500 mg Tablet 20pcs",
+            image: `https://nahdionline.com/media/catalog/product${"/1/0/100011680_0.jpg"}`,
+            url_key: `https://www.nahdionline.com/en/${"panadol-actifast-500-mg-tablet-20pcs"}`,
+            short_description: "Panadol-Actifast 500 mg Tablet 20pcs",
+            meta_title: "Panadol-Actifast 500 mg Tablet 20pcs",
+            price: 7.95,
+            sku: "100011680",
           });
         }
 
@@ -332,6 +381,7 @@ const HomeScreen = ({ navigation }) => {
           quantity: customAttributes.quantity,
           sku: productResponse.sku,
           index: index++,
+          orderQuantity: 0,
         });
       }
 
@@ -339,12 +389,15 @@ const HomeScreen = ({ navigation }) => {
 
       Toast.show({
         text1: "Fetch Duration",
-        text2: `Data fetch took about ${((new Date() - currDate) / 1000.0).toFixed(2)}s to complete ⚡.`,
+        text2: `Data fetch took about ${(
+          (new Date() - currDate) /
+          1000.0
+        ).toFixed(2)}s to complete ⚡.`,
         // type: 'info',
         position: "bottom",
+        visibilityTime: 3000,
         bottomOffset: 60,
       });
-
     } catch (err) {
       console.log(err);
     }
@@ -422,6 +475,9 @@ const HomeScreen = ({ navigation }) => {
 // PDP screen
 const PDPScreen = ({ navigation, route }) => {
   const [visible, setVisible] = useState(false);
+  const [webViewUrl, setWebViewUrl] = useState(
+    "https://www.nahdionline.com/en/"
+  );
 
   const toggleOverlay = () => {
     setVisible(!visible);
@@ -431,7 +487,18 @@ const PDPScreen = ({ navigation, route }) => {
     return (
       <View>
         <Overlay fullScreen isVisible={visible} onBackdropPress={toggleOverlay}>
-          <WebView source={{ uri: route.params.product.url_key }} />
+          <WebView
+            source={{ uri: webViewUrl }}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View style={styles.loading}>
+                <Image
+                  style={{ width: 47, height: 47 }}
+                  source={require("./assets/images/nahdi-loading.gif")}
+                />
+              </View>
+            )}
+          />
         </Overlay>
       </View>
     );
@@ -460,7 +527,7 @@ const PDPScreen = ({ navigation, route }) => {
             source={{
               uri:
                 route.params.product.image ===
-                  "https://nahdionline.com/media/catalog/product"
+                "https://nahdionline.com/media/catalog/product"
                   ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
                   : route.params.product.image,
             }}
@@ -547,7 +614,12 @@ const PDPScreen = ({ navigation, route }) => {
             />
           </View>
           <View style={{ width: 50, height: 50, marginHorizontal: 7 }}>
-            <TouchableOpacity onPress={toggleOverlay}>
+            <TouchableOpacity
+              onPress={() => {
+                setWebViewUrl(route.params.product.url_key);
+                toggleOverlay();
+              }}
+            >
               <Image
                 source={require("./assets/images/icon.png")}
                 style={{ width: 30, height: 30, marginTop: 10 }}
@@ -747,10 +819,17 @@ const PDPScreen = ({ navigation, route }) => {
           </Text>
           <View>
             <View>
-              <Text>{console.log(route.params.product.relatedProducts)}</Text>
               {
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <TouchableOpacity style={{ width: 180 }}>
+                  <TouchableOpacity
+                    style={{ width: 180 }}
+                    onPress={() => {
+                      setWebViewUrl(
+                        route.params.product.relatedProducts[0].url_key
+                      );
+                      toggleOverlay();
+                    }}
+                  >
                     <Card>
                       <Card.Title
                         numberOfLines={1}
@@ -774,17 +853,36 @@ const PDPScreen = ({ navigation, route }) => {
                           source={{
                             uri:
                               route.params.product.relatedProducts[0].image ===
-                                "https://nahdionline.com/media/catalog/product"
+                              "https://nahdionline.com/media/catalog/product"
                                 ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
                                 : route.params.product.relatedProducts[0].image,
                           }}
                           style={{ width: 92, height: 92 }}
                           resizeMode={"contain"}
                         />
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            fontSize: 10,
+                            paddingVertical: 10,
+                            color: "#90A4AE",
+                            fontFamily: "MADTypeVariableBlack",
+                          }}
+                        >
+                          {route.params.product.relatedProducts[0].price} SAR
+                        </Text>
                       </View>
                     </Card>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ width: 180 }}>
+                  <TouchableOpacity
+                    style={{ width: 180 }}
+                    onPress={() => {
+                      setWebViewUrl(
+                        route.params.product.relatedProducts[1].url_key
+                      );
+                      toggleOverlay();
+                    }}
+                  >
                     <Card>
                       <Card.Title
                         numberOfLines={1}
@@ -795,7 +893,7 @@ const PDPScreen = ({ navigation, route }) => {
                           fontFamily: "MADTypeVariableBlack",
                         }}
                       >
-                        {route.params.product.relatedProducts[0].name}
+                        {route.params.product.relatedProducts[1].name}
                       </Card.Title>
                       <Card.Divider />
                       <View
@@ -807,14 +905,25 @@ const PDPScreen = ({ navigation, route }) => {
                         <Image
                           source={{
                             uri:
-                              route.params.product.relatedProducts[0].image ===
-                                "https://nahdionline.com/media/catalog/product"
+                              route.params.product.relatedProducts[1].image ===
+                              "https://nahdionline.com/media/catalog/product"
                                 ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
-                                : route.params.product.relatedProducts[0].image,
+                                : route.params.product.relatedProducts[1].image,
                           }}
                           style={{ width: 92, height: 92 }}
                           resizeMode={"contain"}
                         />
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            fontSize: 10,
+                            paddingVertical: 10,
+                            color: "#90A4AE",
+                            fontFamily: "MADTypeVariableBlack",
+                          }}
+                        >
+                          {route.params.product.relatedProducts[1].price} SAR
+                        </Text>
                       </View>
                     </Card>
                   </TouchableOpacity>
@@ -823,7 +932,7 @@ const PDPScreen = ({ navigation, route }) => {
             </View>
           </View>
         </View>
-        <View style={{ paddingBottom: 50 }} />
+        <View style={{ paddingBottom: 30 }} />
       </ScrollView>
       <View
         style={{
@@ -836,13 +945,13 @@ const PDPScreen = ({ navigation, route }) => {
           backgroundColor: "#fff",
         }}
       >
-        <View style={{ width: 50, height: 50, marginTop: 12 }}>
+        <View style={{ width: 50, height: 50, marginTop: 10 }}>
           <Icon
             name="minus"
             type="font-awesome"
             color="#278585"
             size={20}
-          // onPress={() => setQuantity(quantity - 1)}
+            // onPress={() => setQuantity(quantity - 1)}
           />
         </View>
         <View style={{ width: 50, height: 50 }}>
@@ -860,13 +969,13 @@ const PDPScreen = ({ navigation, route }) => {
             1
           </Text>
         </View>
-        <View style={{ width: 50, height: 50, marginTop: 12 }}>
+        <View style={{ width: 50, height: 50, marginTop: 10 }}>
           <Icon
             name="plus"
             type="font-awesome"
             color="#278585"
             size={20}
-          // onPress={() => setQuantity(quantity + 1)}
+            // onPress={() => setQuantity(quantity + 1)}
           />
         </View>
       </View>
@@ -914,8 +1023,6 @@ export default function App() {
     NahdiBlack: require("./assets/fonts/NahdiBlack.ttf"),
   });
 
-  let BadgedIcon = withBadge(1)(Icon);
-
   if (!loaded) {
     return null;
   }
@@ -936,13 +1043,35 @@ export default function App() {
             headerTintColor: "#fff",
             headerRight: () => (
               <TouchableOpacity>
-                <BadgedIcon
-                  name="shopping-basket"
-                  type="font-awesome"
-                  color="#fff"
-                  size={25}
-                  style={{ paddingRight: 15, paddingBottom: 3 }}
-                />
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <Text
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: "MADTypeVariableBlack",
+                      fontSize: 10,
+                      textAlign: "center",
+                      color: "#fff",
+                      backgroundColor: "#ff6900",
+                      width: 15,
+                      height: 15,
+                      borderRadius: 15 / 2,
+                    }}
+                  >
+                    {cart.count}
+                  </Text>
+                  <View>
+                    <Icon
+                      name="shopping-basket"
+                      type="font-awesome"
+                      color="#fff"
+                      size={25}
+                      style={{ paddingRight: 15, paddingBottom: 3 }}
+                    />
+                  </View>
+                </View>
               </TouchableOpacity>
             ),
             headerLeft: () => (
@@ -970,13 +1099,35 @@ export default function App() {
             headerTintColor: "#fff",
             headerRight: () => (
               <TouchableOpacity>
-                <BadgedIcon
-                  name="shopping-basket"
-                  type="font-awesome"
-                  color="#fff"
-                  size={25}
-                  style={{ paddingRight: 15, paddingBottom: 3 }}
-                />
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <Text
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: "MADTypeVariableBlack",
+                      fontSize: 10,
+                      textAlign: "center",
+                      color: "#fff",
+                      backgroundColor: "#ff6900",
+                      width: 15,
+                      height: 15,
+                      borderRadius: 15 / 2,
+                    }}
+                  >
+                    {cart.count}
+                  </Text>
+                  <View>
+                    <Icon
+                      name="shopping-basket"
+                      type="font-awesome"
+                      color="#fff"
+                      size={25}
+                      style={{ paddingRight: 15, paddingBottom: 3 }}
+                    />
+                  </View>
+                </View>
               </TouchableOpacity>
             ),
           })}
@@ -1018,5 +1169,14 @@ const styles = StyleSheet.create({
   },
   searchinput: {
     color: "#278585",
+  },
+  loading: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Component } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,31 +11,70 @@ import {
 import { Icon, Card } from "react-native-elements";
 import "react-native-gesture-handler";
 
-class ProductCard extends React.PureComponent {
-  render() {
-    // const [quantity, setQuantity] = useState(1);
+class ProductCard extends Component {
+  constructor() {
+    super();
+    this.state = {
+      quantity: 1,
+    };
+  }
 
+  incrementQuantity() {
+    this.setState({
+      quantity: this.state.quantity + 1,
+    });
+  }
+
+  decrementQuantity() {
+    this.setState({
+      quantity: this.state.quantity - 1,
+    });
+  }
+
+  resetQuantity() {
+    this.setState({
+      quantity: 1,
+    });
+  }
+
+  render() {
     const item = this.props.item;
-    const testNavigation = this.props.testNavigation;
+    const navigationHandler = this.props.navigationHandler;
 
     return (
-      <TouchableOpacity activeOpacity={0.6} onPress={() => testNavigation(item.index)}>
+      <TouchableOpacity
+        activeOpacity={0.6}
+        onPress={() => navigationHandler(item.index)}
+      >
         <Card containerStyle={styles.card}>
-          <Card.Title style={{ color: "#278585", fontSize: 12, fontFamily: "MADTypeVariableBlack" }}>
+          <Card.Title
+            style={{
+              color: "#278585",
+              fontSize: 12,
+              fontFamily: "MADTypeVariableBlack",
+            }}
+          >
             {item.status}
           </Card.Title>
           <Card.Divider />
           <Card.Image
             source={{
               uri:
-                item.image ===
-                "https://nahdionline.com/media/catalog/product"
+                item.image === "https://nahdionline.com/media/catalog/product"
                   ? "https://media.glassdoor.com/sqll/930146/nahdi-medical-company-squarelogo-1542203153238.png"
                   : item.image,
             }}
             resizeMode={"contain"}
           />
-          <Text style={{ fontSize: 16,fontFamily: "MADTypeVariableBlack", color: "#90A4AE" }} numberOfLines={2} ellipsizeMode="tail">
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: "MADTypeVariableBlack",
+              color: "#90A4AE",
+            }}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
             {item.name}
           </Text>
           <Text
@@ -44,7 +83,7 @@ class ProductCard extends React.PureComponent {
               paddingTop: 15,
               color: "#278585",
               fontSize: 16,
-              fontFamily: "MADTypeVariableBlack"
+              fontFamily: "MADTypeVariableBlack",
             }}
           >
             {item.price === undefined ? "0" : item.price} SAR
@@ -56,7 +95,7 @@ class ProductCard extends React.PureComponent {
                 type="font-awesome"
                 color="#278585"
                 size={20}
-                // onPress={() => setQuantity(quantity - 1)}
+                onPress={this.decrementQuantity.bind(this)}
               />
             </View>
             <View style={{ width: 50, height: 50 }}>
@@ -68,10 +107,10 @@ class ProductCard extends React.PureComponent {
                   fontWeight: "bold",
                   borderColor: "#278585",
                   borderWidth: 1,
-                  fontFamily: "MADTypeVariableBlack"
+                  fontFamily: "MADTypeVariableBlack",
                 }}
               >
-                1
+                {this.state.quantity}
               </Text>
             </View>
             <View style={{ width: 50, height: 50, marginTop: 10 }}>
@@ -80,14 +119,20 @@ class ProductCard extends React.PureComponent {
                 type="font-awesome"
                 color="#278585"
                 size={20}
-                // onPress={() => setQuantity(quantity + 1)}
+                onPress={this.incrementQuantity.bind(this)}
               />
             </View>
           </View>
           <TouchableHighlight
             underlayColor="#90A4AE"
             activeOpacity={0.6}
-            onPress={() => {}}
+            onPress={() => {
+              item["orderQuantity"] = this.state.quantity;
+              this.props.cart.count =
+              this.props.cart.count + this.state.quantity;
+              this.props.cartList.push(item);
+              this.setState({ quantity: 1 });
+            }}
             style={{ backgroundColor: "#278585" }}
           >
             <View style={{ padding: 5 }}>

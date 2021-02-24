@@ -2,10 +2,10 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Badge } from "react-native-elements";
 
-const withBadge = (value, options = {}) => (WrappedComponent) =>
+let withBadge = (value, options = {}) => (WrappedComponent) =>
   class extends React.Component {
     render() {
-      const {
+      let {
         top = -10,
         right = -10,
         left = 0,
@@ -13,7 +13,7 @@ const withBadge = (value, options = {}) => (WrappedComponent) =>
         hidden = !value,
         ...badgeProps
       } = options;
-      const badgeValue =
+      let badgeValue =
         typeof value === "function" ? value(this.props) : value;
       return (
         <View>
